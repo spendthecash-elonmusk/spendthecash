@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spend Elon Musk's Money</title>
+<style>
+* {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+
+body {
+font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+background: #121212;
+color: #ffffff;
+padding: 20px;
+overflow-x: hidden;
+}
+
+h1 {
+text-align: center;
+font-size: 3rem;
+margin-bottom: 20px;
+color: #f1f1f1;
+}
+
+#balance, #stats {
+text-align: center;
+font-size: 1.5rem;
+margin-bottom: 30px;
+color: #00bcd4;
+}
+
+#user-name {
+text-align: center;
+font-size: 1.2rem;
+color: #b3b3b3;
+}
+
+.items {
+display: grid;
+grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+gap: 20px;
+justify-items: center;
+}
+
+.item {
+background-color: #1e1e1e;
+padding: 25px;
+border-radius: 15px;
+box-shadow: 0 4px 10px rgba(255, 255, 255, 0.1);
+transition: transform 0.3s ease, background-color 0.3s ease;
+text-align: center;
+width: 100%;
+max-width: 320px;
+}
+
+.item:hover {
+transform: scale(1.05);
+background-color: #333333;
+}
+
+.item h3 {
+font-size: 1.5rem;
+margin-bottom: 15px;
+}
+
+.item p {
+font-size: 1rem;
+margin-bottom: 20px;
+color: #ccc;
+}
+
+.item button {
+background-color: #00bcd4;
+color: #fff;
+border: none;
+padding: 12px 20px;
+border-radius: 8px;
+cursor: pointer;
+font-size: 1.1rem;
+transition: background-color 0.3s ease;
+}
+
+.item button:hover {
+background-color: #008c9e;
+}
+
+#reset, #dailyBonus {
+display: block;
+margin: 40px auto;
+background-color: #ff1744;
+padding: 12px 25px;
+border-radius: 8px;
+font-size: 1.1rem;
+color: white;
+border: none;
+cursor: pointer;
+transition: background-color 0.3s ease;
+}
+
+#reset:hover, #dailyBonus:hover {
+background-color: #c4001d;
+}
+
+footer {
+text-align: center;
+margin-top: 50px;
+font-size: 0.9rem;
+opacity: 0.7;
+color: #888;
+}
+
+.dark-mode-toggle {
+position: absolute;
+top: 20px;
+right: 20px;
+background-color: #00bcd4;
+color: #fff;
+padding: 10px 15px;
+border: none;
+border-radius: 8px;
+cursor: pointer;
+}
+
+audio {
+display: block;
+margin: 30px auto;
+width: 100%;
+max-width: 600px;
+}
+
+#shareBtn {
+display: block;
+margin: 30px auto;
+background-color: #4caf50;
+padding: 12px 20px;
+border-radius: 8px;
+color: white;
+border: none;
+cursor: pointer;
+}
+
+#shareBtn:hover {
+background-color: #388e3c;
+}
+
+#stats {
+margin-top: 40px;
+font-size: 1.2rem;
+color: #ff9800;
+}
+</style>
+</head>
+<body>
+<button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+
+<h1>Spend Elon Musk's Money</h1>
+<div id="user-name"></div>
+<div id="balance"></div>
+<div id="stats"></div>
+<audio id="cashSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+<div class="items" id="items"></div>
+
+<button id="dailyBonus" onclick="earnDailyBonus()">🎯 Daily Bonus</button>
+<button id="reset" onclick="resetGame()">Reset Game</button>
+<button id="shareBtn" onclick="shareGame()">Share on Social Media</button>
+
+<footer>Made with ❤️ | Elon Musk Edition | Score: <span id="score">0</span></footer>
+
+<script>
+const initialMoney = 200_000_000_000;
+let money = parseFloat(localStorage.getItem("money")) || initialMoney;
+let purchases = JSON.parse(localStorage.getItem("purchases")) || {};
+let score = parseInt(localStorage.getItem("score")) || 0;
+let userName = localStorage.getItem("userName") || "Elon Jr.";
+const dailyBonusAmount = 1000000000;
+let lastBonusDate = localStorage.getItem("lastBonusDate");
+
+const items = [
+{ name: "Tesla Model S", cost: 80000, image: "https://i.ibb.co/m5p2KdpB/model-s-exterior-front-view.webp"},
+{ name: "Twitter Ads", cost: 200000, image: "https://i.ibb.co/bjG1YSgS/new-twitter-logo2-1-removebg-preview.png" },
+{ name: "Starlink Setup", cost: 500000, image: "https://i.ibb.co/5Xf2RgJM/i-Stock-926382468-2.jpg" },
+{ name: "Rocket Fuel", cost: 1000000, image: "https://i.ibb.co/8ZHtGGB/istockphoto-941523082-612x612.jpg" },
+{ name: "Mars Ticket", cost: 5000000, image: "https://i.ibb.co/xqzWFssy/NASA-pass.png" },
+{ name: "Tesla Factory", cost: 100000000, image: "https://i.ibb.co/35sJwLdq/tesla-fremont-factory-2-1200x802.webp" },
+{ name: "Private Jet", cost: 200000000, image: "https://i.ibb.co/zh70rHMR/gulfstream-g700-musk.jpg" },
+{ name: "Luxury Island", cost: 1000000000, image: "https://i.ibb.co/358HwhVL/Private-Island-11.webp" },
+{ name: "AI Startup", cost: 50000000, image: "https://i.ibb.co/GvLksBrf/670e5e92ce2d9772473f1cff-655b5f1b09f2238e3ed1f873-10-best-ai-startup-ideas.png" },
+{ name: "Neuralink Implant", cost: 300000, image: "https://i.ibb.co/jvtV05Bv/80632599-13622815-Having-gained-FDA-approval-Musk-announced-that-a-device-called-T-a-62-172068361150.jpg" },
+{ name: "Underground Tunnel", cost: 700000000, image: "https://i.ibb.co/1JQ40Fb9/istockphoto-984049944-612x612.jpg" },
+{ name: "Hyperloop Project", cost: 900000000, image: "https://i.ibb.co/39dLYZ4L/tn-int-hyperloop-concept-Priestman-Goode.jpg" },
+{ name: "SpaceX Mission", cost: 1500000000, image: "https://i.ibb.co/pBd6SqnN/nhq202409280009.webp" },
+{ name: "Supercomputer", cost: 350000000, image: "https://i.ibb.co/TxmC13CB/1-Elha1-Zkxfb7-MHX3-Mabh-Exw.jpg" },
+{ name: "Elon Robot", cost: 120000000, image: "https://i.ibb.co/N6gq2tW7/Optimus-Gen-2-featured-img.webp" },
+{ name: "Cybertruck", cost: 40000, image: "https://i.ibb.co/W8rsNYF/2025-tesla-cybertruck-3-672e75cce7814.jpg" },
+{ name: "SpaceX Starship", cost: 250000000, image: "https://i.ibb.co/BHQP2GDG/Space-X-Starship-Revolutionizing-Space-Travel.jpg" },
+{ name: "Boring Company Tunnel", cost: 10000000, image: "https://i.ibb.co/235nBT6f/105636956-1545231038093gettyimages-1074387588.jpg" },
+{ name: "Solar City Project", cost: 200000000, image: "https://i.ibb.co/gFv6y5gv/hq720-2.jpg" },
+{ name: "Neuralink Brain Chip", cost: 1000000, image: "https://i.ibb.co/ZRtCr4n2/67868b267dc99-elon-musks-neuralink-114850534-16x9.jpg" },
+{ name: "Luxury Yacht", cost: 500000000, image: "https://i.ibb.co/fdLCb8LN/maxresdefault-5.jpg" },
+{ name: "Solar Panel Array", cost: 300000000, image: "https://i.ibb.co/r25FbkC4/How-solar-energy-is-created.webp" },
+{ name: "Moon Base", cost: 2000000000, image: "https://i.ibb.co/nsWndk3w/Lunar-Living-Modules.webp" },
+];
+
+function formatMoney(amount) {
+return "$" + amount.toLocaleString();
+}
+
+function updateUI() {
+document.getElementById("balance").innerText = `💰 Balance: ${formatMoney(money)}`;
+document.getElementById("score").innerText = score;
+document.getElementById("user-name").innerText = `Welcome back, ${userName}!`;
+localStorage.setItem("money", money);
+localStorage.setItem("purchases", JSON.stringify(purchases));
+localStorage.setItem("score", score);
+localStorage.setItem("userName", userName);
+
+const itemsDiv = document.getElementById("items");
+itemsDiv.innerHTML = "";
+items.forEach(item => {
+const count = purchases[item.name] || 0;
+const itemEl = document.createElement("div");
+itemEl.className = "item";
+itemEl.innerHTML = `
+<h3>${item.name}</h3>
+<img src="${item.image}" alt="${item.name}" style="width: 100%; height: auto; border-radius: 10px; margin-bottom: 15px;">
+<p>Cost: ${formatMoney(item.cost)}</p>
+<p>Owned: ${count}</p>
+<button onclick="buyItem('${item.name}', ${item.cost})">Buy</button>
+`;
+itemsDiv.appendChild(itemEl);
+});
+}
+
+function buyItem(name, cost) {
+if (money >= cost) {
+money -= cost;
+score++;
+purchases[name] = (purchases[name] || 0) + 1;
+playSound();
+updateUI();
+} else {
+alert("Not enough money!");
+}
+}
+
+function earnDailyBonus() {
+const today = new Date().toISOString().split("T")[0];
+if (today !== lastBonusDate) {
+money += dailyBonusAmount;
+lastBonusDate = today;
+localStorage.setItem("lastBonusDate", lastBonusDate);
+updateUI();
+} else {
+alert("You have already claimed your daily bonus!");
+}
+}
+
+function resetGame() {
+localStorage.clear();
+money = initialMoney;
+purchases = {};
+score = 0;
+lastBonusDate = null;
+updateUI();
+}
+
+function playSound() {
+const sound = document.getElementById("cashSound");
+sound.play();
+}
+
+function shareGame() {
+alert("Sharing functionality coming soon!");
+}
+
+function toggleDarkMode() {
+const currentBg = document.body.style.backgroundColor;
+if (currentBg === "rgb(18, 18, 18)") {
+document.body.style.backgroundColor = "#fff";
+document.body.style.color = "#000";
+document.querySelector(".dark-mode-toggle").innerText = "Switch to Dark Mode";
+} else {
+document.body.style.backgroundColor = "#121212";
+document.body.style.color = "#fff";
+document.querySelector(".dark-mode-toggle").innerText = "Switch to Light Mode";
+}
+}
+
+updateUI();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
